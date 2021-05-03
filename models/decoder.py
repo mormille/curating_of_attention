@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+__all__ = ['DecoderModule', 'TransformerDecoder', 'TransformerDecoderLayer', 'build_transformer']
 
 class DecoderModule(nn.Module):
 
@@ -49,7 +49,7 @@ class DecoderModule(nn.Module):
         mask = mask.flatten(1)
 
         tgt = torch.zeros_like(query_embed)
-        hs = self.decoder(tgt, memory, memory_key_padding_mask=mask.to(device),
+        hs = self.decoder(tgt, memory, memory_key_padding_mask=mask #.to(device),
                           pos=None, query_pos=None)
         return hs.transpose(1, 2), memory.permute(1, 2, 0).view(bs, c, h, w)
 
@@ -88,7 +88,7 @@ class TransformerDecoder(nn.Module):
             if self.return_intermediate:
                 intermediate.pop()
                 intermediate.append(output)
-
+        
         if self.return_intermediate:
             return torch.stack(intermediate)
 

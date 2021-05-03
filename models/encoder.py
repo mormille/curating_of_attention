@@ -12,13 +12,15 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+#device= torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+
+__all__ = ['EncoderModule']
 
 class EncoderModule(nn.Module):
 
     def __init__(self, d_model=256, nhead=1, num_encoder_layers=6,
-                 dim_feedforward=2048, dropout=0.1,
+                 dim_feedforward=256, dropout=0.1,
                  activation="relu", normalize_before=False,
                  return_intermediate_dec=False):
         super().__init__()
@@ -38,14 +40,14 @@ class EncoderModule(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
-    def create_mask(self, encoder_input):
-        b, c, h, w = encoder_input.shape
-        mask = torch.zeros((b, h, w), dtype=torch.bool)
-        return mask
+    #def create_mask(self, encoder_input):
+    #    b, c, h, w = encoder_input.shape
+    #    mask = torch.zeros((b, h, w), dtype=torch.bool)
+    #    return mask
 
-    def forward(self, src, pos_embed):
+    def forward(self, src, mask, pos_embed):
         # create mask
-        mask = self.create_mask(src)
+        #mask = self.create_mask(src)#.cuda()
         # flatten NxCxHxW to HWxNxC
         bs, c, h, w = src.shape
         #print(src.shape)
@@ -58,7 +60,8 @@ class EncoderModule(nn.Module):
         mask = mask.flatten(1)
 
         #tgt = torch.zeros_like(query_embed)
-        memory, sattn = self.encoder(src, src_key_padding_mask=mask.to(device), pos=pos_embed.to(device))
+        #memory, sattn = self.encoder(src, src_key_padding_mask=mask.to(device), pos=pos_embed.to(device))
+        memory, sattn = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
         #sattn = memory[1]
         #memory = memory[0]
 
@@ -82,7 +85,7 @@ class TransformerEncoder(nn.Module):
 
         for layer in self.layers:
             output, sattn = layer(output, src_mask=mask,
-                           src_key_padding_mask=src_key_padding_mask.to(device), pos=pos.to(device))
+                           src_key_padding_mask=src_key_padding_mask, pos=pos)
 
         if self.norm is not None:
             output = self.norm(output)
@@ -123,7 +126,7 @@ class TransformerEncoderLayer(nn.Module):
         #print(q.shape)
         #print(k.shape)
         src2 = self.self_attn(q, k, value=src, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask.to(device))
+                              key_padding_mask=src_key_padding_mask)
         sattn = src2[1]
         #print(sattn.shape)
         src2 = src2[0]

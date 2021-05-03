@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+__all__ = ['UNet']
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
@@ -97,6 +99,7 @@ class UNet(nn.Module):
         #self.fc1 = nn.Linear(n_classes*180*180, 10)
 
     def forward(self, x):
+        #print("Passing through the Generator")
         x0 = x
         x1 = self.inc(x)
         x2 = self.down1(x1)
